@@ -1,0 +1,37 @@
+<main class="todo">
+  <h1>Todo</h1>
+
+  <form class="todo__form" (ngSubmit)="addTodo()">
+    <input
+      class="todo__input"
+      name="draft"
+      placeholder="What needs to be done?"
+      autocomplete="off"
+      [(ngModel)]="draft"
+    />
+    <button class="todo__add" type="submit">Add</button>
+  </form>
+
+  @if (todos().length) {
+    <ul class="todo__list">
+      @for (todo of todos(); track todo.id) {
+        <li class="todo__item" [class.todo__item--done]="todo.done">
+          <label>
+            <input type="checkbox" [checked]="todo.done" (change)="toggle(todo.id)" />
+            <span>{{ todo.title }}</span>
+          </label>
+          <button class="todo__remove" type="button" aria-label="Remove" (click)="remove(todo.id)">
+            ×
+          </button>
+        </li>
+      }
+    </ul>
+
+    <footer class="todo__footer">
+      <span>{{ remaining() }} remaining</span>
+      <button class="todo__clear" type="button" (click)="clearCompleted()">Clear completed</button>
+    </footer>
+  } @else {
+    <p class="todo__empty">Nothing here yet.</p>
+  }
+</main>
