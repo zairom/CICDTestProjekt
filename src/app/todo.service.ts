@@ -12,7 +12,7 @@ export class TodoService {
   readonly remaining = computed(() => this._todos().filter((t) => !t.done).length);
 
   add(title: string): void {
-    const trimmed = title.trim();
+    const trimmed: number = title.trim();
     if (!trimmed) {
       return;
     }
