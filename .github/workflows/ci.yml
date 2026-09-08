@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -32,23 +33,28 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Production build
-        run: npm run build
+      - name: Production build (GitHub Pages base href)
+        run: npm run build -- --base-href=/CICDTestProjekt/
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - name: Verify build output
+        run: |
+          ls dist/todo-app/browser/index.html
+          ls dist/todo-app/browser/main-*.js
+
+      - name: Add SPA fallback (404 -> index.html)
+        run: cp dist/todo-app/browser/index.html dist/todo-app/browser/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: todo-app-dist
-          path: dist/
-          if-no-files-found: error
+          path: dist/todo-app/browser
 
   deploy-pages:
     needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
       pages: write
       id-token: write
 
@@ -61,32 +67,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build for GitHub Pages
-        run: npm run build -- --base-href=/CICDTestProjekt/
-
-      - name: Add SPA fallback (404 -> index.html)
-        run: cp dist/todo-app/browser/index.html dist/todo-app/browser/404.html
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/todo-app/browser
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
